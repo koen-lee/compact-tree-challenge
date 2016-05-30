@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ITrie.cs" />
+    <Compile Include="BaseTrie.cs" />
     <Compile Include="NoTrie.cs" />
     <Compile Include="NoTrieTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
