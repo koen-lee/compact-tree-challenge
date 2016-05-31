@@ -1,7 +1,4 @@
 ﻿using System;
-using System.CodeDom;
-using System.IO;
-using System.Text;
 
 namespace Trie
 {
@@ -16,12 +13,47 @@ namespace Trie
 
         public override bool TryWrite(string key, long value)
         {
-            throw new NotImplementedException();
+            var i = 0;
+            while (i < _storage.Length - sizeof (ushort))
+            {
+                int next;
+                var readkey = ReadString(i, out next);
+                if (readkey == key || readkey == string.Empty)
+                    return WriteItem(i, key, value);
+                var length = ReadUshort(next, out next);
+                i = next + length;
+            }
+            return false;
         }
 
+        private bool WriteItem(int address, string key, long value)
+        {
+            var bytes = Encoding.GetBytes(key);
+            var size = sizeof (ushort) // string length
+                       + bytes.Length // string
+                       + sizeof (ushort) //subtree length
+                       + sizeof (byte) // flags
+                       + sizeof (long); // value
+            if (address
+                + size
+                > _storage.Length)
+                return false; // does not fit
+            WriteUshort(address, (ushort) bytes.Length, out address);
+            WriteBytes(address, bytes, out address);
+            WriteUshort(address, sizeof (byte) + sizeof (long), out address);
+            WriteFlags(address, true, false, out address);
+            WriteLong(address, value, out address);
+            return true;
+        }
 
-        private static readonly ushort HasValue = 1 << 0;
-        private static readonly ushort HasChildren = 1 << 1;
+        private void WriteFlags(int address, bool hasvalue, bool haschildren, out int i)
+        {
+            _storage[address] = (byte) ((haschildren ? HasChildren : 0) | (hasvalue ? HasValue : 0));
+            i = address + 1;
+        }
+
+        private static readonly byte HasValue = 1 << 0;
+        private static readonly byte HasChildren = 1 << 1;
 
         private void ReadFlags(ref int address, out bool hasValue, out bool hasChildren )
         {

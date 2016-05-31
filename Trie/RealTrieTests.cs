@@ -4,7 +4,7 @@ namespace Trie
 {
     [TestFixture]
     public class RealTrieTests
-    {/*
+    {
         [Test]
         public void WriteLastItemWorks()
         {
@@ -16,7 +16,7 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
-                5,0,
+                9,0,
                 1,
                 123,0,0,0,
                 0,0,0,0,
@@ -44,7 +44,7 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
-                5,0,
+                9,0,
                 1,
                 123,0,0,0,
                 0,0,0,0,
@@ -53,7 +53,7 @@ namespace Trie
                 0
             }, storage);
         }
-        /*
+        
         [Test]
         public void WriteSecondItemWorks()
         {
@@ -61,32 +61,39 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 0,0,
                 0,0,0,0,
+                0,0,
+                0,
                 0,0,0,0,
                 0,0,0,0,
             };
-            var undertest = new NoTrie(storage);
+            var undertest = new RealTrie(storage);
             var result = undertest.TryWrite("Work", 99);
             Assert.That(result, "expected success");
             CollectionAssert.AreEqual(new byte[]
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             }, storage);
         }
-
-        */
+        
         [Test]
         public void ReadFirstItemWorks()
         { 
