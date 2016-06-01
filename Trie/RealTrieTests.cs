@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 
 namespace Trie
@@ -93,7 +94,90 @@ namespace Trie
                 0,0,0,0,
             }, storage);
         }
-        
+
+        [Test]
+        public void WriteSecondItemWithSameSubstringWorks()
+        {
+            var storage = new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
+                123,0,0,0,
+                0,0,0,0,
+
+                0,0,
+                0,0,0,0,
+                0,0,
+                0,
+                0,0,0,0,
+                0,0,0,0,
+            };
+            var undertest = new RealTrie(storage);
+            var result = undertest.TryWrite("testing", 99);
+            Assert.That(result, "expected success");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                17,0,
+                3,
+                123,0,0,0,
+                0,0,0,0,
+                3,0,
+                (byte)'i',(byte)'n',(byte)'g',
+                9,0,
+                1,
+                99,0,0,0,
+                0,0,0,0,
+                0
+            }, storage);
+        }
+
+        [Test]
+        public void WriteSecondItemWithSamePrefixWorks()
+        {
+            var storage = new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
+                123,0,0,0,
+                0,0,0,0,
+
+                0,0,
+                0,0,0,0,
+                0,0,
+                0,
+                0,0,0,0,
+                0
+            };/**/
+            var undertest = new RealTrie(storage);
+            var result = undertest.TryWrite("team", 99);
+            Assert.That(result, "expected success");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                2,0,
+                (byte)'t',(byte)'e',
+                25,0,
+                2,
+                2,0,
+                (byte)'s',(byte)'t',
+                9,0,
+                1,
+                123,0,0,0,
+                0,0,0,0,
+                2,0,
+                (byte)'a',(byte)'m',
+                9,0,
+                1,
+                99,0,0,0,
+                0,0,0,0,
+            }, storage);
+        }
+
         [Test]
         public void ReadFirstItemWorks()
         { 
@@ -189,6 +273,81 @@ namespace Trie
             var result = undertest.TryRead("test", out value);
             Assert.That(result, "expected success");
             Assert.That(value, Is.EqualTo(123));
+        }
+
+        [Test]
+        public void ParseWithSubItemsWorks()
+        {
+            var undertest = new RealTrie(new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9+16,0,
+                3,
+                123,0,0,0,
+                0,0,0,0,
+
+                3,0,
+                (byte)'i',(byte)'n',(byte)'g',
+                9,0,
+                1,
+                99,0,0,0,
+                0,0,0,0,
+            });
+            int i = 0;
+            var result = RealTrie.TrieItem.Read(undertest, ref i);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Key, Is.EqualTo("test"));
+            Assert.That(result.HasChildren);
+            Assert.That(result.HasValue);
+            Assert.That(result.Value, Is.EqualTo(123));
+            Assert.That(result.PayloadSize, Is.EqualTo(9+16));
+            Assert.That(result.ItemSize, Is.EqualTo(2+4+2+9+16));
+
+            var child = result.Children.Single();
+
+            Assert.That(child, Is.Not.Null);
+            Assert.That(child.Key, Is.EqualTo("ing"));
+            Assert.That(child.HasChildren, Is.False);
+            Assert.That(child.HasValue);
+            Assert.That(child.Value, Is.EqualTo(99));
+            Assert.That(child.PayloadSize, Is.EqualTo(9));
+        }
+
+        [Test]
+        public void ParseWithValuelessParentItemsWorks()
+        {
+            var undertest = new RealTrie(new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                1+16,0,
+                2,
+
+                3,0,
+                (byte)'i',(byte)'n',(byte)'g',
+                9,0,
+                1,
+                99,0,0,0,
+                0,0,0,0,
+            });
+            int i = 0;
+            var result = RealTrie.TrieItem.Read(undertest, ref i);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Key, Is.EqualTo("test"));
+            Assert.That(result.HasChildren);
+            Assert.That(result.HasValue, Is.False);
+            Assert.That(result.PayloadSize, Is.EqualTo(1 + 16));
+            Assert.That(result.ItemSize, Is.EqualTo(2 + 4 + 2 + 1 + 16));
+
+            var child = result.Children.Single();
+
+            Assert.That(child, Is.Not.Null);
+            Assert.That(child.Key, Is.EqualTo("ing"));
+            Assert.That(child.HasChildren, Is.False);
+            Assert.That(child.HasValue);
+            Assert.That(child.Value, Is.EqualTo(99));
+            Assert.That(child.PayloadSize, Is.EqualTo(9));
         }
 
         [Test]
