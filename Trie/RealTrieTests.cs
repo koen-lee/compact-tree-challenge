@@ -121,7 +121,7 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
-                17,0,
+                25,0,
                 3,
                 123,0,0,0,
                 0,0,0,0,
@@ -152,8 +152,10 @@ namespace Trie
                 0,0,
                 0,
                 0,0,0,0,
-                0
-            };/**/
+                0,
+                0,0,0,0,
+                0,0,
+            };
             var undertest = new RealTrie(storage);
             var result = undertest.TryWrite("team", 99);
             Assert.That(result, "expected success");
@@ -161,7 +163,7 @@ namespace Trie
             {
                 2,0,
                 (byte)'t',(byte)'e',
-                25,0,
+                31,0,
                 2,
                 2,0,
                 (byte)'s',(byte)'t',
