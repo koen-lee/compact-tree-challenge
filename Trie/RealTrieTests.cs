@@ -96,6 +96,46 @@ namespace Trie
         }
 
         [Test]
+        public void DeleteLastItemWorks()
+        {
+            var storage = new byte[]
+            {
+                4, 0,
+                (byte) 't', (byte) 'e', (byte) 's', (byte) 't',
+                9, 0,
+                1,
+                123, 0, 0, 0,
+                0, 0, 0, 0,
+
+                0, 0,
+                0, 0, 0, 0,
+                0, 0,
+                0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+            };
+            var undertest = new RealTrie(storage);
+            undertest.Delete("test");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                0, 0,
+                0, 0, 0, 0,
+                0, 0,
+                0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+
+                0, 0,
+                0, 0, 0, 0,
+                0, 0,
+                0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+
+            }, storage);
+        }
+        
+        [Test]
         public void WriteSecondItemWithSameSubstringWorks()
         {
             var storage = new byte[]
@@ -134,6 +174,86 @@ namespace Trie
                 0
             }, storage);
         }
+
+
+        [Test]
+        public void Delete_last_child_works()
+        {
+            var storage = new byte[]
+            {
+                4, 0,
+                (byte) 't', (byte) 'e', (byte) 's', (byte) 't',
+                25, 0,
+                3,
+                123, 0, 0, 0,
+                0, 0, 0, 0,
+                3, 0,
+                (byte) 'i', (byte) 'n', (byte) 'g',
+                9, 0,
+                1,
+                99, 0, 0, 0,
+                0, 0, 0, 0,
+                0
+            };
+            var undertest = new RealTrie(storage);
+            undertest.Delete("testing");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                4,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
+                123,0,0,0,
+                0,0,0,0,
+
+                0,0,
+                0,0,0,0,
+                0,0,
+                0,
+                0,0,0,0,
+                0,0,0,0,
+            }, storage);
+        }
+
+        [Test]
+        public void Delete_parent_works()
+        {
+            var storage = new byte[]
+            {
+                4, 0,
+                (byte) 't', (byte) 'e', (byte) 's', (byte) 't',
+                25, 0,
+                3,
+                123, 0, 0, 0,
+                0, 0, 0, 0,
+                3, 0,
+                (byte) 'i', (byte) 'n', (byte) 'g',
+                9, 0,
+                1,
+                99, 0, 0, 0,
+                0, 0, 0, 0,
+                0
+            };
+            var undertest = new RealTrie(storage);
+            undertest.Delete("test");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                7,0,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t', (byte)'i',(byte)'n',(byte)'g',
+                9,0,
+                1,
+                99,0,0,0,
+                0,0,0,0,
+
+                0,0,
+                0,0,0,0,
+                0,0,
+                0,
+                0,0,0,0,
+                0,
+            }, storage);
+        }
+
 
         [Test]
         public void WriteSecondItemWithSamePrefixWorks()

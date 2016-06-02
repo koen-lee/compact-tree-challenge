@@ -19,49 +19,39 @@ namespace Trie
             if (key == string.Empty)
                 return false;
             // parse entire tree
-            int i = 0;
-            var root = new TrieItem("", null);
-            while (i < _storage.Length)
-            {
-                var itemRead = TrieItem.Read(this, ref i);
-                if (itemRead == null)
-                    break;
-                root.AddChild(itemRead);
-            }
+            var root = ReadTrie();
             //add new item
             string keyLeft;
             var match = root.FindParentOf(key, out keyLeft);
             if (keyLeft.Length == 0) // key already exists 
             {
                 match.Value = value;
-            } else
+            }
+            else
             {
                 match.CreateChild(keyLeft, value);
             }
+            return WriteRoot(root);
+        }
 
-            // write back
-            i = 0;
+        private bool WriteRoot(TrieItem root)
+        {
+            var i = 0;
             return root.Children.All(item => item.Write(this, ref i));
         }
-        
-        private bool WriteItem(int address, string key, long value)
+
+        private TrieItem ReadTrie()
         {
-            var bytes = Encoding.GetBytes(key);
-            var size = sizeof(ushort) // string length
-                       + bytes.Length // string
-                       + sizeof(ushort) //subtree length
-                       + sizeof(byte) // flags
-                       + sizeof(long); // value
-            if (address
-                + size
-                > _storage.Length)
-                return false; // does not fit
-            WriteUshort(address, (ushort)bytes.Length, out address);
-            WriteBytes(address, bytes, out address);
-            WriteUshort(address, sizeof(byte) + sizeof(long), out address);
-            WriteFlags(address, true, false, out address);
-            WriteLong(address, value, out address);
-            return true;
+            var i = 0;
+            var root = new TrieItem("", null);
+            while (i < _storage.Length - sizeof(ushort))
+            {
+                var itemRead = TrieItem.Read(this, ref i);
+                if (itemRead == null)
+                    break;
+                root.AddChild(itemRead);
+            }
+            return root;
         }
 
         private void WriteFlags(int address, bool hasvalue, bool haschildren, out int i)
@@ -121,16 +111,41 @@ namespace Trie
 
         public override void Delete(string key)
         {
-            throw new NotImplementedException();
+            var root = ReadTrie();
+            string keyLeft;
+            var item = root.FindParentOf(key, out keyLeft);
+            if (keyLeft.Length > 0) return; //key not found
+            if (!item.HasValue) return; // no value to remove
+            // otherwise, there is work to do
+            var parentOfItem = root.FindParentOf(key.Substring(0, key.Length - 1), out keyLeft);
+            parentOfItem.Delete(item);
+
+            ClearStorage();
+            WriteRoot(root);
+        }
+
+        private void ClearStorage()
+        {
+            Array.Copy(new byte[_storage.Length], _storage, _storage.Length);
         }
 
 
         public class TrieItem
         {
-            public string Key { get; private set; }
+            public string Key
+            {
+                get { return _key; }
+                private set
+                {
+                    _key = value;
+                    _keyBytes = Encoding.GetBytes(Key);
+                }
+            }
+
             public bool HasValue => Value.HasValue;
             private readonly List<TrieItem> _children;
             private byte[] _keyBytes;
+            private string _key;
             public bool HasChildren => _children.Any();
             public long? Value { get; set; }
             public IEnumerable<TrieItem> Children => _children;
@@ -140,7 +155,6 @@ namespace Trie
                 Key = key;
                 Value = value;
                 _children = new List<TrieItem>();
-                _keyBytes = new UTF8Encoding().GetBytes(Key);
             }
 
             public void AddChild(TrieItem child)
@@ -158,16 +172,10 @@ namespace Trie
                 }
             }
 
-            public int ItemSize
-            {
-                get
-                {
-                    return sizeof(ushort) //key length
-                           + _keyBytes.Length
-                           + sizeof(ushort) //payload size
-                           + PayloadSize;
-                }
-            }
+            public int ItemSize => sizeof(ushort) //key length
+                                   + _keyBytes.Length
+                                   + sizeof(ushort) //payload size
+                                   + PayloadSize;
 
             public static TrieItem Read(RealTrie storage, ref int address)
             {
@@ -187,6 +195,12 @@ namespace Trie
                 return result;
             }
 
+            /// <summary>
+            /// Writes the item at the given address
+            /// </summary>
+            /// <param name="storage">the storage array</param>
+            /// <param name="address">the address to start; is updated to the first free address</param>
+            /// <returns>whether the item could be written</returns>
             public bool Write(RealTrie storage, ref int address)
             {
                 var size = ItemSize;
@@ -250,6 +264,21 @@ namespace Trie
                         return i;
                 }
                 return left.Length;
+            }
+
+            public void Delete(TrieItem item)
+            {
+                if (!item.HasChildren)
+                    _children.Remove(item);
+                else if (item._children.Count == 1)
+                {
+                    _children.Remove(item);
+                    var orphan = item._children[0];
+                    orphan.Key = item.Key + orphan.Key;
+                    AddChild(orphan);
+                }
+                else if (item._children.Count > 1)
+                    item.Value = null;
             }
         }
     }
