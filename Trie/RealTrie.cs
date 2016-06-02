@@ -20,33 +20,30 @@ namespace Trie
                 return false;
             // parse entire tree
             int i = 0;
-            var roots = new List<TrieItem>();
+            var root = new TrieItem("", null);
             while (i < _storage.Length)
             {
                 var itemRead = TrieItem.Read(this, ref i);
                 if (itemRead == null)
                     break;
-                roots.Add(itemRead);
+                root.AddChild(itemRead);
             }
             //add new item
-            roots.Add(new TrieItem(key, value));
+            string keyLeft;
+            var match = root.FindParentOf(key, out keyLeft);
+            if (keyLeft.Length == 0) // key already exists 
+            {
+                match.Value = value;
+            } else
+            {
+                match.CreateChild(keyLeft, value);
+            }
+
             // write back
             i = 0;
-            return roots.All(item => item.Write(this, ref i));
+            return root.Children.All(item => item.Write(this, ref i));
         }
         
-        private int GetCommonPrefix(string left, string right)
-        {
-            if (left.Length > right.Length)
-                return GetCommonPrefix(right, left); //swap arguments
-            for (int i = 0; i < left.Length; i++)
-            {
-                if (left[0] != right[0])
-                    return i;
-            }
-            return left.Length;
-        }
-
         private bool WriteItem(int address, string key, long value)
         {
             var bytes = Encoding.GetBytes(key);
@@ -135,7 +132,7 @@ namespace Trie
             private readonly List<TrieItem> _children;
             private byte[] _keyBytes;
             public bool HasChildren => _children.Any();
-            public long? Value { get; }
+            public long? Value { get; set; }
             public IEnumerable<TrieItem> Children => _children;
 
             public TrieItem(string key, long? value)
@@ -206,6 +203,53 @@ namespace Trie
                     child.Write(storage, ref address);
                 }
                 return true;
+            }
+
+            public TrieItem FindParentOf(string key, out string keyLeft)
+            {
+                foreach (var child in Children)
+                {
+                    if (key.StartsWith(child.Key))
+                        return child.FindParentOf(key.Substring(child.Key.Length), out keyLeft);
+                }
+                keyLeft = key;
+                return this;
+            }
+
+            public void CreateChild(string keyLeft, long value)
+            {
+                foreach (var child in Children)
+                {
+                    var common = GetCommonPrefix(keyLeft, child.Key);
+                    if (common > 0)
+                    {
+                        SplitChild(child, common, keyLeft, value);
+                        return;
+                    }
+                }
+                AddChild(new TrieItem(keyLeft, value));
+            }
+
+            private void SplitChild(TrieItem child, int common, string keyLeft, long value)
+            {
+                var commonKey = keyLeft.Substring(0, common);
+                var commonItem = new TrieItem(commonKey, null);
+                commonItem.AddChild(new TrieItem(child.Key.Substring(common), child.Value));
+                commonItem.AddChild(new TrieItem(keyLeft.Substring(common), value));
+                _children.Remove(child);
+                AddChild(commonItem);
+            }
+
+            private static int GetCommonPrefix(string left, string right)
+            {
+                if (left.Length > right.Length)
+                    return GetCommonPrefix(right, left); //swap arguments
+                for (int i = 0; i < left.Length; i++)
+                {
+                    if (left[i] != right[i])
+                        return i;
+                }
+                return left.Length;
             }
         }
     }
