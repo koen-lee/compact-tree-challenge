@@ -602,7 +602,7 @@ namespace Trie
             var result = undertest.TryRead("test does not exist", out value);
             Assert.IsFalse(result, "expected failure");
         }
-        /*
+        
         [Test]
         public void OverwriteKeyWorks()
         {
@@ -610,27 +610,34 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             };
-            var undertest = new NoTrie(storage);
-            long value;
+            var undertest = new RealTrie(storage);
             var result = undertest.TryWrite("Work", 0xabcdef01);
             Assert.IsTrue(result, "expected success");
             CollectionAssert.AreEqual(new byte[]
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 0x01,0xef,0xcd,0xab,
                 0,0,0,0,
             }, storage);
@@ -643,24 +650,31 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             };
-            var undertest = new NoTrie(storage);
+            var undertest = new RealTrie(storage);
             undertest.Delete("Work");
             CollectionAssert.AreEquivalent(new byte[]
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
-                0,0,
+                0,0,0,0,
+                0,
                 0,0,0,0,
                 0,0,0,0,
                 0,0,0,0,
@@ -674,24 +688,32 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             };
-            var undertest = new NoTrie(storage);
+            var undertest = new RealTrie(storage);
             undertest.Delete("test");
             CollectionAssert.AreEquivalent(new byte[]
             {
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
 
                 0,0,
+                0,0,
+                0,
                 0,0,0,0,
                 0,0,0,0,
                 0,0,0,0,
@@ -706,28 +728,36 @@ namespace Trie
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             };
-            var undertest = new NoTrie(storage);
+            var undertest = new RealTrie(storage);
             undertest.Delete("DoesNotExist");
             CollectionAssert.AreEquivalent(new byte[]
             {
                 4,0,
                 (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                9,0,
+                1,
                 123,0,0,0,
                 0,0,0,0,
 
                 4,0,
                 (byte)'W',(byte)'o',(byte)'r',(byte)'k',
+                9,0,
+                1,
                 99,0,0,0,
                 0,0,0,0,
             }, storage);
-        }*/
+        }
     }
 }
