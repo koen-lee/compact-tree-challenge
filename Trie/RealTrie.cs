@@ -50,18 +50,18 @@ namespace Trie
         private bool WriteItem(int address, string key, long value)
         {
             var bytes = Encoding.GetBytes(key);
-            var size = sizeof (ushort) // string length
+            var size = sizeof(ushort) // string length
                        + bytes.Length // string
-                       + sizeof (ushort) //subtree length
-                       + sizeof (byte) // flags
-                       + sizeof (long); // value
+                       + sizeof(ushort) //subtree length
+                       + sizeof(byte) // flags
+                       + sizeof(long); // value
             if (address
                 + size
                 > _storage.Length)
                 return false; // does not fit
-            WriteUshort(address, (ushort) bytes.Length, out address);
+            WriteUshort(address, (ushort)bytes.Length, out address);
             WriteBytes(address, bytes, out address);
-            WriteUshort(address, sizeof (byte) + sizeof (long), out address);
+            WriteUshort(address, sizeof(byte) + sizeof(long), out address);
             WriteFlags(address, true, false, out address);
             WriteLong(address, value, out address);
             return true;
@@ -69,18 +69,18 @@ namespace Trie
 
         private void WriteFlags(int address, bool hasvalue, bool haschildren, out int i)
         {
-            _storage[address] = (byte) ((haschildren ? HasChildrenFlag : 0) | (hasvalue ? HasValueFlag : 0));
+            _storage[address] = (byte)((haschildren ? HasChildrenFlag : 0) | (hasvalue ? HasValueFlag : 0));
             i = address + 1;
         }
 
         private static readonly byte HasValueFlag = 1 << 0;
         private static readonly byte HasChildrenFlag = 1 << 1;
 
-        private void ReadFlags(ref int address, out bool hasValue, out bool hasChildren )
+        private void ReadFlags(ref int address, out bool hasValue, out bool hasChildren)
         {
             var flags = _storage[address];
-            hasValue = (flags & HasValueFlag)!=0;
-            hasChildren = (flags & HasChildrenFlag)!=0;
+            hasValue = (flags & HasValueFlag) != 0;
+            hasChildren = (flags & HasChildrenFlag) != 0;
             address++;
         }
 
@@ -155,21 +155,21 @@ namespace Trie
             {
                 get
                 {
-                    return sizeof (byte) //flags
-                           + (HasValue? sizeof(long): 0)
-                           + Children.Sum(c=>c.ItemSize);
+                    return sizeof(byte) //flags
+                           + (HasValue ? sizeof(long) : 0)
+                           + Children.Sum(c => c.ItemSize);
                 }
             }
 
-            public int ItemSize 
+            public int ItemSize
             {
                 get
                 {
-                    return sizeof (ushort) //key length
+                    return sizeof(ushort) //key length
                            + _keyBytes.Length
                            + sizeof(ushort) //payload size
                            + PayloadSize;
-                }  
+                }
             }
 
             public static TrieItem Read(RealTrie storage, ref int address)
@@ -195,11 +195,11 @@ namespace Trie
                 var size = ItemSize;
                 if (address + size > storage._storage.Length)
                     return false;
-                storage.WriteUshort(address,(ushort) _keyBytes.Length, out address);
-                storage.WriteBytes(address,  _keyBytes, out address);
+                storage.WriteUshort(address, (ushort)_keyBytes.Length, out address);
+                storage.WriteBytes(address, _keyBytes, out address);
                 storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 storage.WriteFlags(address, HasValue, HasChildren, out address);
-                if( HasValue)
+                if (HasValue)
                     storage.WriteLong(address, Value.Value, out address);
                 foreach (var child in Children)
                 {
