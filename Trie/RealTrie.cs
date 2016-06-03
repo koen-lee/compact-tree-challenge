@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -20,6 +22,8 @@ namespace Trie
                 return false;
             // parse entire tree
             var root = ReadTrie();
+            if( root.Children.Any(c=>c.Key.Contains('\0')))
+                throw new InvalidDataException();
             //add new item
             string keyLeft;
             var match = root.FindParentOf(key, out keyLeft);
@@ -36,6 +40,7 @@ namespace Trie
 
         private bool WriteRoot(TrieItem root)
         {
+            if (root.Children.Sum(c => c.ItemSize) > _storage.Length) return false;
             var i = 0;
             return root.Children.All(item => item.Write(this, ref i));
         }
@@ -129,7 +134,7 @@ namespace Trie
             Array.Copy(new byte[_storage.Length], _storage, _storage.Length);
         }
 
-
+        [DebuggerDisplay("{Key} {Value}")]
         public class TrieItem
         {
             public string Key

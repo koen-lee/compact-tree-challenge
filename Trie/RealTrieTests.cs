@@ -759,5 +759,24 @@ namespace Trie
                 0,0,0,0,
             }, storage);
         }
+
+        [Test]
+        public void AddFiles()
+        { 
+            var undertest = new RealTrie();
+            
+            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip.chm", 92392);
+            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip.dll", 88064);
+            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip32.dll", 56320);
+            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7z.dll", 1478656);
+        }
+
+        private static void WriteAndReadBack(RealTrie undertest, string key, int v)
+        {
+            undertest.TryWrite(key, v);
+            long value;
+            Assert.That(undertest.TryRead(key, out value));
+            Assert.That(value, Is.EqualTo(v));
+        }
     }
 }
