@@ -44,8 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bufferpart.cs" />
     <Compile Include="ITrie.cs" />
     <Compile Include="BaseTrie.cs" />
+    <Compile Include="OptimizedTrie.cs" />
     <Compile Include="RealTrieTests.cs" />
     <Compile Include="RealTrie.cs" />
     <Compile Include="NoTrie.cs" />

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -12,21 +13,26 @@ namespace Trie
         [Test]
         public void CompareTries()
         {
-            var notrie = new NoTrie();
-            var realtrie = new RealTrie();
-            var itemsInNoTrie = 0;
-            var itemsInRealTrie = 0;
-            foreach (var kv in GetTestData().Take(10000))
-            {
-                Console.WriteLine($"{kv.Key}: {kv.Value}");
-                if (notrie.TryWrite(kv.Key, kv.Value))
-                    itemsInNoTrie++;
-                if (realtrie.TryWrite(kv.Key, kv.Value))
-                    itemsInRealTrie++;
-            }
+            var testdata = GetTestData().Take(32 * 1024 / 8).ToArray();
+            
+            TestTrie(new NoTrie(), testdata);
+            TestTrie(new RealTrie(), testdata);
+            TestTrie(new OptimizedTrie(), testdata);
+        }
 
-            Console.WriteLine($"Items in flat storage: {itemsInNoTrie}");
-            Console.WriteLine($"Items in trie storage: {itemsInRealTrie}");
+        private static void TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
+        {
+            var items = 0;
+            Console.WriteLine($"Testing {trie.GetType()}");
+            var stopwatch = Stopwatch.StartNew();
+            foreach (var kv in testdata)
+            {
+                if (!trie.TryWrite(kv.Key, kv.Value))
+                    break;
+                items++;
+            }
+            Console.WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
+            Console.WriteLine($"Items in {trie.GetType()}: {items}");
         }
 
         IEnumerable<KeyValuePair<string, long>> GetTestData()
