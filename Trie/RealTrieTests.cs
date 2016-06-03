@@ -765,10 +765,10 @@ namespace Trie
         { 
             var undertest = new RealTrie();
             
-            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip.chm", 92392);
-            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip.dll", 88064);
-            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7-zip32.dll", 56320);
-            WriteAndReadBack(undertest, @"C:\Program Files\7-Zip\7z.dll", 1478656);
+            WriteAndReadBack(undertest, @"A-zip.ch", 92392);
+            WriteAndReadBack(undertest, @"A-zip.dl", 88064);
+            WriteAndReadBack(undertest, @"A-zip3", 56320);
+            WriteAndReadBack(undertest, @"Az", 1478656);
         }
 
         private static void WriteAndReadBack(RealTrie undertest, string key, int v)

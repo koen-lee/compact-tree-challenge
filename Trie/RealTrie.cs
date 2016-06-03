@@ -253,9 +253,10 @@ namespace Trie
             {
                 var commonKey = keyLeft.Substring(0, common);
                 var commonItem = new TrieItem(commonKey, null);
-                commonItem.AddChild(new TrieItem(child.Key.Substring(common), child.Value));
-                commonItem.AddChild(new TrieItem(keyLeft.Substring(common), value));
                 _children.Remove(child);
+                child.Key = child.Key.Substring(common);
+                commonItem.AddChild(child);
+                commonItem.AddChild(new TrieItem(keyLeft.Substring(common), value));
                 AddChild(commonItem);
             }
 
