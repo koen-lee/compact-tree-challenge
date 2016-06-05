@@ -154,10 +154,10 @@ namespace Trie
             public long? Value { get; set; }
             public IEnumerable<TrieItem> Children => _children;
 
-            public TrieItem(byte[] key, long? value): this(new Bufferpart(key), value)
+            public TrieItem(byte[] key, long? value) : this(new Bufferpart(key), value)
             { }
 
-            public TrieItem(Bufferpart key, long? value)
+            private TrieItem(Bufferpart key, long? value)
             {
                 Key = key;
                 Value = value;
@@ -187,10 +187,11 @@ namespace Trie
             {
                 var keylength = storage._storage[address];
                 if (keylength == 0) return null;
-                var hasvalue = keylength > 127;
+                var hasvalue = (keylength & 1 << 7) != 0;
                 keylength &= 0x7f;
                 address++;
                 var key = new Bufferpart(storage._storage, address, keylength);
+                address += keylength;
                 var max = address + storage.ReadUshort(address, out address);
                 long? value = null;
                 if (hasvalue)
@@ -201,6 +202,18 @@ namespace Trie
                     result.AddChild(Read(storage, ref address));
                 }
                 return result;
+            }
+
+            public static TrieItem Create(Bufferpart key, long? value)
+            {
+                var maxKeyLength = 127;
+                if (key.Length <= maxKeyLength)
+                {
+                    return new TrieItem(key, value);
+                }
+                var parent = new TrieItem(key.Substring(0, maxKeyLength), null);
+                parent.AddChild(Create(key.Substring(maxKeyLength), value));
+                return parent;
             }
 
             /// <summary>
@@ -221,7 +234,7 @@ namespace Trie
                 address++;
                 storage.WriteBytes(address, _key.GetBytes(), out address);
                 storage.WriteUshort(address, (ushort)PayloadSize, out address);
-                if (HasValue)
+                if (Value.HasValue)
                     storage.WriteLong(address, Value.Value, out address);
                 foreach (var child in Children)
                 {
@@ -252,7 +265,7 @@ namespace Trie
                         return;
                     }
                 }
-                AddChild(new TrieItem(keyLeft, value));
+                AddChild(Create(keyLeft, value));
             }
 
             private void SplitChild(TrieItem child, int common, Bufferpart keyLeft, long value)
@@ -262,7 +275,7 @@ namespace Trie
                 _children.Remove(child);
                 child.Key = child.Key.Substring(common);
                 commonItem.AddChild(child);
-                commonItem.AddChild(new TrieItem(keyLeft.Substring(common), value));
+                commonItem.AddChild(Create(keyLeft.Substring(common), value));
                 AddChild(commonItem);
             }
 
@@ -286,7 +299,8 @@ namespace Trie
                 {
                     _children.Remove(item);
                     var orphan = item._children[0];
-                    orphan.Key = item.Key + orphan.Key;
+                    var newKey = item.Key + orphan.Key;
+                    orphan.Key = newKey;
                     AddChild(orphan);
                 }
                 else if (item._children.Count > 1)
