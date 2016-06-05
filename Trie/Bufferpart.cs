@@ -60,7 +60,7 @@ namespace Trie
         {
             if (key.Length > Length)
                 return false;
-            for (int i = 0; i < Length; i++)
+            for (int i = 0; i < key.Length; i++)
             {
                 if (this[i] != key[i])
                     return false;

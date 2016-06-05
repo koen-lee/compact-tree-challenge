@@ -97,5 +97,21 @@ namespace Trie
                 1, 2, 3, 4, 5, 6, 7, 8, 9
             }, bytes);
         }
+
+        [Test]
+        public void StartsWithWorks()
+        {
+            var buffer_1234567 = new Bufferpart(new byte[]
+            {
+                99, 1, 2, 3, 4, 5, 6, 7, 88
+            }, 1, 7);
+
+            var buffer_123 = new Bufferpart(new byte[]
+            {1, 2, 3});
+
+            Assert.That(buffer_1234567.StartsWith(buffer_123));
+            Assert.That(buffer_1234567.StartsWith(buffer_1234567));
+            Assert.IsFalse(buffer_123.StartsWith(buffer_1234567));
+        }
     }
 }
