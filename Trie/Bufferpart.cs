@@ -41,8 +41,8 @@ namespace Trie
         public static Bufferpart operator +(Bufferpart left, Bufferpart right)
         {
             var result = new byte[left.Length + right.Length];
-            Array.Copy(left.Buffer, result, left.Length);
-            Array.Copy(right.Buffer, 0, result, left.Length, right.Length);
+            Array.Copy(left.Buffer, left.Offset, result, 0, left.Length);
+            Array.Copy(right.Buffer, right.Offset, result, left.Length, right.Length);
             return new Bufferpart(result);
         }
         

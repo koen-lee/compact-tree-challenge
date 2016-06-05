@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bufferpart.cs" />
+    <Compile Include="BufferpartTests.cs" />
     <Compile Include="ITrie.cs" />
     <Compile Include="BaseTrie.cs" />
     <Compile Include="OptimizedTrie.cs" />
