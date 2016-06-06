@@ -40,7 +40,10 @@ namespace Trie
         {
             if (root.Children.Sum(c => c.ItemSize) > _storage.Length) return false;
             var i = 0;
-            return root.Children.All(item => item.Write(this, ref i));
+
+            foreach( var child in root.Children)
+                child.Write(this, ref i);
+            return true;
         }
 
         private TrieItem ReadTrie()
@@ -193,15 +196,18 @@ namespace Trie
                 _parent?.MarkDirty();
             }
 
-            public int PayloadSize
+            private int PayloadSize
             {
                 get
                 {
-                    return Children.Sum(c => c.ItemSize);
+                    var sum = 0;
+                    for (int i = 0; i < _children.Count; i++)
+                        sum += _children[i].ItemSize;
+                    return sum;
                 }
             }
 
-            private int? _itemSize = null;
+            private int? _itemSize;
             private TrieItem _parent;
             public int ItemSize => _itemSize ?? GetItemSize();
 
@@ -253,11 +259,8 @@ namespace Trie
             /// <param name="storage">the storage array</param>
             /// <param name="address">the address to start; is updated to the first free address</param>
             /// <returns>whether the item could be written</returns>
-            public bool Write(OptimizedTrie storage, ref int address)
+            public void Write(OptimizedTrie storage, ref int address)
             {
-                var size = ItemSize;
-                if (address + size > storage._storage.Length)
-                    return false;
                 byte keylength = (byte)_key.Length;
                 if (HasValue)
                     keylength |= 1 << 7;
@@ -274,7 +277,6 @@ namespace Trie
                 {
                     child.Write(storage, ref address);
                 }
-                return true;
             }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
