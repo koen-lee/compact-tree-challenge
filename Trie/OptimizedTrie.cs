@@ -59,35 +59,37 @@ namespace Trie
         
         public override bool TryRead(string key, out long value)
         {
-            return TryReadValue(key, out value, 0, _storage.Length);
+            var thekey = new Bufferpart(Encoding.GetBytes(key));
+            return TryReadValue(thekey, out value, 0, _storage.Length);
         }
 
-        private bool TryReadValue(string key, out long value, int startAddress, int maxAddress)
+        private bool TryReadValue(Bufferpart key, out long value, int startAddress, int maxAddress)
         {
             value = 0;
             if (key.Length == 0)
                 return false;
             while (startAddress < maxAddress - sizeof(byte))// a string should fit
             {
-                var prefix = ReadString(startAddress, out startAddress);
-                if (prefix == string.Empty)
+                int subtreeLength = 0;
+                bool hasValue, hasChildren;
+                var prefix = GetKey(this, ref startAddress, out hasValue, out hasChildren);
+                if (prefix.Length == 0)
                     return false;
-                var subtreeLength = ReadUshort(startAddress, out startAddress);
+                if (hasValue)
+                    value = ReadLong(startAddress, out startAddress);
+                if (hasChildren)
+                    subtreeLength = ReadUshort(startAddress, out startAddress);
                 if (key.StartsWith(prefix))
                 {
-                    bool hasValue, hasChildren;
-                    ReadFlags(ref startAddress, out hasValue, out hasChildren);
-                    if (hasValue)
+                    if (key.Length == prefix.Length)
                     {
-                        value = ReadLong(startAddress, out startAddress);
-                        if (key.Length == prefix.Length)
-                        {
-                            return true; // exact match
-                        }
+                        return hasValue; // exact match
                     }
                     if (hasChildren)
+                    {
                         return TryReadValue(key.Substring(prefix.Length), out value, startAddress,
                             startAddress + subtreeLength);
+                    }
                     return false;
                 }
                 startAddress += subtreeLength;
@@ -116,6 +118,25 @@ namespace Trie
             Array.Copy(new byte[_storage.Length], _storage, _storage.Length);
         }
 
+
+        private static Bufferpart GetKey(OptimizedTrie storage, ref int address, out bool hasvalue, out bool haschildren)
+        {
+            var keylength = storage._storage[address];
+            if (keylength == 0)
+            {
+                hasvalue = haschildren = false;
+                return new Bufferpart(EmptyKey);
+            }
+            hasvalue = (keylength & 1 << 7) != 0;
+            haschildren = (keylength & 1 << 6) != 0;
+            keylength &= TrieItem.MaxKeylength;
+            address++;
+            var key = new Bufferpart(storage._storage, address, keylength);
+            address += keylength;
+            return key;
+        }
+
+
         [DebuggerDisplay("{Key} {Value}")]
         public class TrieItem
         {
@@ -132,7 +153,7 @@ namespace Trie
             public bool HasValue => Value.HasValue;
             private readonly List<TrieItem> _children;
             private Bufferpart _key;
-            private static readonly byte MaxKeylength = 0x3f;
+            public static readonly byte MaxKeylength = 0x3f;
             public bool HasChildren => _children.Any();
             public long? Value { get; set; }
             public IEnumerable<TrieItem> Children => _children;
@@ -167,14 +188,11 @@ namespace Trie
 
             public static TrieItem Read(OptimizedTrie storage, ref int address)
             {
-                var keylength = storage._storage[address];
-                if (keylength == 0) return null;
-                var hasvalue = (keylength & 1 << 7) != 0;
-                var haschildren = (keylength & 1 << 6) != 0;
-                keylength &= MaxKeylength;
-                address++;
-                var key = new Bufferpart(storage._storage, address, keylength);
-                address += keylength;
+                bool hasvalue;
+                bool haschildren;
+                Bufferpart key = GetKey(storage, ref address, out hasvalue, out haschildren);
+                if (key.Length == 0)
+                    return null;
                 int max = 0;
                 long? value = null;
                 if (hasvalue)
