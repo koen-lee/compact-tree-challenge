@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Trie
 {
@@ -58,24 +56,7 @@ namespace Trie
             }
             return root;
         }
-
-        private void WriteFlags(int address, bool hasvalue, bool haschildren, out int i)
-        {
-            _storage[address] = (byte)((haschildren ? HasChildrenFlag : 0) | (hasvalue ? HasValueFlag : 0));
-            i = address + 1;
-        }
-
-        private static readonly byte HasValueFlag = 1 << 0;
-        private static readonly byte HasChildrenFlag = 1 << 1;
-
-        private void ReadFlags(ref int address, out bool hasValue, out bool hasChildren)
-        {
-            var flags = _storage[address];
-            hasValue = (flags & HasValueFlag) != 0;
-            hasChildren = (flags & HasChildrenFlag) != 0;
-            address++;
-        }
-
+        
         public override bool TryRead(string key, out long value)
         {
             return TryReadValue(key, out value, 0, _storage.Length);
