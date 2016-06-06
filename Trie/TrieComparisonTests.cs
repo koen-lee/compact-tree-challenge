@@ -10,14 +10,33 @@ namespace Trie
     [TestFixture]
     public class TrieComparisonTests
     {
-        [Test]
-        public void CompareTries()
+        private KeyValuePair<string, long>[] _testdata;
+
+        [TestFixtureSetUp]
+        public void GenerateTestData()
         {
-            var testdata = GetTestData().Take(32 * 1024 / 8).ToArray();
-            
-            TestTrie(new NoTrie(), testdata);
-            TestTrie(new RealTrie(), testdata);
-            TestTrie(new OptimizedTrie(), testdata);
+            _testdata = GetTestData().Take(32 * 1024 / 8).ToArray();
+        }
+
+        [Test]
+
+        public void TestNoTrie()
+        {
+            TestTrie(new NoTrie(), _testdata);
+        }
+
+        [Test]
+
+        public void TestRealTrie()
+        {
+            TestTrie(new RealTrie(), _testdata);
+        }
+
+        [Test]
+
+        public void TestOptimizedTrie()
+        {
+            TestTrie(new OptimizedTrie(), _testdata);
         }
 
         private static void TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
@@ -33,6 +52,16 @@ namespace Trie
             }
             Console.WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
             Console.WriteLine($"Items in {trie.GetType()}: {items}");
+            stopwatch.Restart();
+            foreach (var kv in testdata.Take(items))
+            {
+                long value;
+                if (!trie.TryRead(kv.Key, out value))
+                    throw new InvalidDataException($"could not read back {kv.Key}: key not found");
+                if ( value != kv.Value)
+                    throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
+            }
+            Console.WriteLine($"Readback Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
         }
 
         IEnumerable<KeyValuePair<string, long>> GetTestData()
