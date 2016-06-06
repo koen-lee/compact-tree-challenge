@@ -176,11 +176,11 @@ namespace Trie
                 var key = new Bufferpart(storage._storage, address, keylength);
                 address += keylength;
                 int max = 0;
-                if (haschildren)
-                    max = address + storage.ReadUshort(address, out address);
                 long? value = null;
                 if (hasvalue)
                     value = storage.ReadLong(address, out address);
+                if (haschildren)
+                    max = address + storage.ReadUshort(address, out address);
                 var result = new TrieItem(key.GetBytes(), value);
                 while (address < max)
                 {
@@ -219,10 +219,10 @@ namespace Trie
                 storage._storage[address] = keylength;
                 address++;
                 storage.WriteBytes(address, _key.GetBytes(), out address);
-                if (HasChildren)
-                    storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 if (Value.HasValue)
                     storage.WriteLong(address, Value.Value, out address);
+                if (HasChildren)
+                    storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 foreach (var child in Children)
                 {
                     child.Write(storage, ref address);
