@@ -268,7 +268,7 @@ namespace Trie
                     keylength |= 1 << 6;
                 storage._storage[address] = keylength;
                 address++;
-                storage.WriteBytes(address, _key.GetBytes(), out address);
+                storage.WriteBytes(address, _key, out address);
                 if (Value.HasValue)
                     storage.WriteLong(address, Value.Value, out address);
                 if (HasChildren)
@@ -342,6 +342,12 @@ namespace Trie
                 else if (item._children.Count > 1)
                     item.Value = null;
             }
+        }
+
+        private void WriteBytes(int address, Bufferpart bytes, out int next)
+        {
+            Array.Copy(bytes.Buffer, bytes.Offset, _storage, address, bytes.Length);
+            next = address + bytes.Length;
         }
     }
 }
