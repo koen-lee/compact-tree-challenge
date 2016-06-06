@@ -86,7 +86,7 @@ namespace Trie
             value = 0;
             if (key.Length == 0)
                 return false;
-            while (startAddress < maxAddress - sizeof(ushort))// a string should fit
+            while (startAddress < maxAddress - sizeof(byte))// a string should fit
             {
                 var prefix = ReadString(startAddress, out startAddress);
                 if (prefix == string.Empty)
@@ -143,6 +143,7 @@ namespace Trie
                 get { return _key; }
                 private set
                 {
+                    if (Key.Length > MaxKeylength) throw new ArgumentException();
                     _key = value;
                 }
             }
@@ -150,6 +151,7 @@ namespace Trie
             public bool HasValue => Value.HasValue;
             private readonly List<TrieItem> _children;
             private Bufferpart _key;
+            private static readonly byte MaxKeylength = 0x3f;
             public bool HasChildren => _children.Any();
             public long? Value { get; set; }
             public IEnumerable<TrieItem> Children => _children;
@@ -173,26 +175,28 @@ namespace Trie
             {
                 get
                 {
-                    return (HasValue ? sizeof(long) : 0)
-                    + Children.Sum(c => c.ItemSize);
+                    return Children.Sum(c => c.ItemSize);
                 }
             }
 
             public int ItemSize => sizeof(byte) //key length
                                    + _key.Length
-                                   + sizeof(ushort) //payload size
-                                   + PayloadSize;
+                                   + (HasChildren ? sizeof(ushort) + PayloadSize : 0) //payload size
+                                   + (HasValue ? sizeof(long) : 0);
 
             public static TrieItem Read(OptimizedTrie storage, ref int address)
             {
                 var keylength = storage._storage[address];
                 if (keylength == 0) return null;
                 var hasvalue = (keylength & 1 << 7) != 0;
-                keylength &= 0x7f;
+                var haschildren = (keylength & 1 << 6) != 0;
+                keylength &= MaxKeylength;
                 address++;
                 var key = new Bufferpart(storage._storage, address, keylength);
                 address += keylength;
-                var max = address + storage.ReadUshort(address, out address);
+                int max = 0;
+                if (haschildren)
+                    max = address + storage.ReadUshort(address, out address);
                 long? value = null;
                 if (hasvalue)
                     value = storage.ReadLong(address, out address);
@@ -206,13 +210,12 @@ namespace Trie
 
             public static TrieItem Create(Bufferpart key, long? value)
             {
-                var maxKeyLength = 127;
-                if (key.Length <= maxKeyLength)
+                if (key.Length <= MaxKeylength)
                 {
                     return new TrieItem(key, value);
                 }
-                var parent = new TrieItem(key.Substring(0, maxKeyLength), null);
-                parent.AddChild(Create(key.Substring(maxKeyLength), value));
+                var parent = new TrieItem(key.Substring(0, MaxKeylength), null);
+                parent.AddChild(Create(key.Substring(MaxKeylength), value));
                 return parent;
             }
 
@@ -230,10 +233,13 @@ namespace Trie
                 byte keylength = (byte)_key.Length;
                 if (HasValue)
                     keylength |= 1 << 7;
+                if (HasChildren)
+                    keylength |= 1 << 6;
                 storage._storage[address] = keylength;
                 address++;
                 storage.WriteBytes(address, _key.GetBytes(), out address);
-                storage.WriteUshort(address, (ushort)PayloadSize, out address);
+                if (HasChildren)
+                    storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 if (Value.HasValue)
                     storage.WriteLong(address, Value.Value, out address);
                 foreach (var child in Children)
