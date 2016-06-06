@@ -273,8 +273,9 @@ namespace Trie
                     storage.WriteLong(address, Value.Value, out address);
                 if (HasChildren)
                     storage.WriteUshort(address, (ushort)PayloadSize, out address);
-                foreach (var child in Children)
+                for (var index = 0; index < _children.Count; index++)
                 {
+                    var child = _children[index];
                     child.Write(storage, ref address);
                 }
             }
