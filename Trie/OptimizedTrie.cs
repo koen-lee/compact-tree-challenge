@@ -56,7 +56,7 @@ namespace Trie
             }
             return root;
         }
-        
+
         public override bool TryRead(string key, out long value)
         {
             var thekey = new Bufferpart(Encoding.GetBytes(key));
@@ -147,15 +147,26 @@ namespace Trie
                 {
                     if (Key.Length > MaxKeylength) throw new ArgumentException();
                     _key = value;
+                    MarkDirty();
                 }
             }
 
             public bool HasValue => Value.HasValue;
             private readonly List<TrieItem> _children;
             private Bufferpart _key;
+            private long? _value;
+
             public static readonly byte MaxKeylength = 0x3f;
-            public bool HasChildren => _children.Any();
-            public long? Value { get; set; }
+            public bool HasChildren { get; private set; }
+            public long? Value
+            {
+                get { return _value; }
+                set
+                {
+                    _value = value;
+                    MarkDirty();
+                }
+            }
             public IEnumerable<TrieItem> Children => _children;
 
             public TrieItem(byte[] key, long? value) : this(new Bufferpart(key), value)
@@ -171,6 +182,15 @@ namespace Trie
             public void AddChild(TrieItem child)
             {
                 _children.Add(child);
+                child._parent = this;
+                HasChildren = true;
+                MarkDirty();
+            }
+
+            private void MarkDirty()
+            {
+                _itemSize = null;
+                _parent?.MarkDirty();
             }
 
             public int PayloadSize
@@ -181,10 +201,19 @@ namespace Trie
                 }
             }
 
-            public int ItemSize => sizeof(byte) //key length
-                                   + _key.Length
-                                   + (HasChildren ? sizeof(ushort) + PayloadSize : 0) //payload size
-                                   + (HasValue ? sizeof(long) : 0);
+            private int? _itemSize = null;
+            private TrieItem _parent;
+            public int ItemSize => _itemSize ?? GetItemSize();
+
+            private int GetItemSize()
+            {
+                var size = sizeof(byte) //key length
+                        + _key.Length
+                        + (HasChildren ? sizeof(ushort) + PayloadSize : 0) //payload size
+                        + (HasValue ? sizeof(long) : 0);
+                _itemSize = size;
+                return size;
+            }
 
             public static TrieItem Read(OptimizedTrie storage, ref int address)
             {
