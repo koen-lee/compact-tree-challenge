@@ -52,7 +52,7 @@ namespace Trie
             var root = new TrieItem(EmptyKey, null);
             while (i < _storage.Length - sizeof(ushort))
             {
-                var itemRead = TrieItem.Read(this, ref i);
+                var itemRead = TrieItem.Read(_storage, ref i);
                 if (itemRead == null)
                     break;
                 root.AddChild(itemRead);
@@ -224,21 +224,22 @@ namespace Trie
                 return size;
             }
 
-            public static TrieItem Read(OptimizedTrie storage, ref int address)
+            public static TrieItem Read(byte[] buffer, ref int address)
             {
                 bool hasvalue;
                 bool haschildren;
-                Bufferpart key = GetKey(storage._storage, ref address, out hasvalue, out haschildren);
+                Bufferpart key = GetKey(buffer, ref address, out hasvalue, out haschildren);
                 if (key.Length == 0)
                     return null;
                 long? value = null;
                 if (hasvalue)
-                    value = storage.ReadLong(address, out address);
+                    value = buffer.ReadLong(ref address);
                 var result = new TrieItem(key.GetBytes(), value);
                 if (haschildren)
                 {
-                    var payloadLength = storage.ReadUshort(address, out address);
-                    result.Payload = new Bufferpart(storage._storage, address, payloadLength).GetBytes();
+                    var payloadLength = buffer.ReadUshort(ref address);
+                    result.Payload = new Bufferpart(buffer, address, payloadLength).GetBytes();
+                    address += payloadLength;
                 }
                 return result;
             }
@@ -313,7 +314,6 @@ namespace Trie
             private void ReadChildren()
             {
                 var address = 0;
-               
                 while (address < Payload.Length)
                 {
                     AddChild(Read(Payload, ref address));
@@ -371,6 +371,7 @@ namespace Trie
                 }
                 else if (item._children.Count > 1)
                     item.Value = null;
+                HasChildren = _children.Count > 0;
             }
         }
 
@@ -378,6 +379,22 @@ namespace Trie
         {
             Array.Copy(bytes.Buffer, bytes.Offset, _storage, address, bytes.Length);
             next = address + bytes.Length;
+        }
+    }
+
+    public static class ByteArrayExtensions
+    {
+        public static long ReadLong(this byte[] buffer, ref int address)
+        {
+            var result = BitConverter.ToInt64(buffer, address);
+            address += sizeof(long);
+            return result;
+        }
+        public static ushort ReadUshort(this byte[] buffer, ref int address)
+        {
+            var result = BitConverter.ToUInt16(buffer, address);
+            address += sizeof(ushort);
+            return result;
         }
     }
 }
