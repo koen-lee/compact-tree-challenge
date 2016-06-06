@@ -41,7 +41,7 @@ namespace Trie
             if (root.Children.Sum(c => c.ItemSize) > _storage.Length) return false;
             var i = 0;
 
-            foreach( var child in root.Children)
+            foreach (var child in root.Children)
                 child.Write(this, ref i);
             return true;
         }
@@ -75,7 +75,7 @@ namespace Trie
             {
                 int subtreeLength = 0;
                 bool hasValue, hasChildren;
-                var prefix = GetKey(this, ref startAddress, out hasValue, out hasChildren);
+                var prefix = GetKey(_storage, ref startAddress, out hasValue, out hasChildren);
                 if (prefix.Length == 0)
                     return false;
                 if (hasValue)
@@ -122,9 +122,9 @@ namespace Trie
         }
 
 
-        private static Bufferpart GetKey(OptimizedTrie storage, ref int address, out bool hasvalue, out bool haschildren)
+        private static Bufferpart GetKey(byte[] buffer, ref int address, out bool hasvalue, out bool haschildren)
         {
-            var keylength = storage._storage[address];
+            var keylength = buffer[address];
             if (keylength == 0)
             {
                 hasvalue = haschildren = false;
@@ -134,7 +134,7 @@ namespace Trie
             haschildren = (keylength & 1 << 6) != 0;
             keylength &= TrieItem.MaxKeylength;
             address++;
-            var key = new Bufferpart(storage._storage, address, keylength);
+            var key = new Bufferpart(buffer, address, keylength);
             address += keylength;
             return key;
         }
@@ -200,6 +200,8 @@ namespace Trie
             {
                 get
                 {
+                    if (Payload != null)
+                        return Payload.Length;
                     var sum = 0;
                     for (int i = 0; i < _children.Count; i++)
                         sum += _children[i].ItemSize;
@@ -209,6 +211,7 @@ namespace Trie
 
             private int? _itemSize;
             private TrieItem _parent;
+            private byte[] _payload;
             public int ItemSize => _itemSize ?? GetItemSize();
 
             private int GetItemSize()
@@ -225,21 +228,29 @@ namespace Trie
             {
                 bool hasvalue;
                 bool haschildren;
-                Bufferpart key = GetKey(storage, ref address, out hasvalue, out haschildren);
+                Bufferpart key = GetKey(storage._storage, ref address, out hasvalue, out haschildren);
                 if (key.Length == 0)
                     return null;
-                int max = 0;
                 long? value = null;
                 if (hasvalue)
                     value = storage.ReadLong(address, out address);
-                if (haschildren)
-                    max = address + storage.ReadUshort(address, out address);
                 var result = new TrieItem(key.GetBytes(), value);
-                while (address < max)
+                if (haschildren)
                 {
-                    result.AddChild(Read(storage, ref address));
+                    var payloadLength = storage.ReadUshort(address, out address);
+                    result.Payload = new Bufferpart(storage._storage, address, payloadLength).GetBytes();
                 }
                 return result;
+            }
+
+            public byte[] Payload
+            {
+                get { return _payload; }
+                set
+                {
+                    _payload = value;
+                    HasChildren = true;
+                }
             }
 
             public static TrieItem Create(Bufferpart key, long? value)
@@ -273,15 +284,23 @@ namespace Trie
                     storage.WriteLong(address, Value.Value, out address);
                 if (HasChildren)
                     storage.WriteUshort(address, (ushort)PayloadSize, out address);
-                for (var index = 0; index < _children.Count; index++)
-                {
-                    var child = _children[index];
-                    child.Write(storage, ref address);
-                }
+                if (Payload != null)
+                    storage.WriteBytes(address, Payload, out address);
+                else
+                    for (var index = 0; index < _children.Count; index++)
+                    {
+                        var child = _children[index];
+                        child.Write(storage, ref address);
+                    }
             }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
             {
+                if (Payload != null)
+                {
+                    ReadChildren();
+                    Payload = null;
+                }
                 foreach (var child in Children)
                 {
                     if (key.StartsWith(child.Key))
@@ -289,6 +308,16 @@ namespace Trie
                 }
                 keyLeft = key;
                 return this;
+            }
+
+            private void ReadChildren()
+            {
+                var address = 0;
+               
+                while (address < Payload.Length)
+                {
+                    AddChild(Read(Payload, ref address));
+                }
             }
 
             public void CreateChild(Bufferpart keyLeft, long value)
