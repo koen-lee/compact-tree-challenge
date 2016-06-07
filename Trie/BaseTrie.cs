@@ -13,7 +13,7 @@ namespace Trie
         
         protected BaseTrie(byte[] storage)
         {
-            if (storage.Length > 32 * 1024) throw new ArgumentOutOfRangeException(nameof(storage), "Array too big");
+            if (storage.Length - 1 > ushort.MaxValue) throw new ArgumentOutOfRangeException(nameof(storage), "Array too big");
             _storage = storage;
         }
 
