@@ -111,7 +111,6 @@ namespace Trie
             // otherwise, there is work to do
             var parentOfItem = root.FindParentOf(thekey.Substring(0, thekey.Length - 1), out keyLeft);
             parentOfItem.Delete(item);
-
             ClearStorage();
             WriteRoot(root);
         }
@@ -120,7 +119,6 @@ namespace Trie
         {
             Array.Copy(new byte[_storage.Length], _storage, _storage.Length);
         }
-
 
         private static Bufferpart GetKey(byte[] buffer, ref int address, out bool hasvalue, out bool haschildren)
         {
@@ -139,7 +137,6 @@ namespace Trie
             return key;
         }
 
-
         [DebuggerDisplay("{Key} {Value}")]
         public class TrieItem
         {
@@ -150,27 +147,29 @@ namespace Trie
                 {
                     if (Key.Length > MaxKeylength) throw new ArgumentException();
                     _key = value;
-                    MarkDirty();
                 }
             }
 
             public bool HasValue => Value.HasValue;
             private readonly List<TrieItem> _children;
             private Bufferpart _key;
-            private long? _value;
 
             public static readonly byte MaxKeylength = 0x3f;
             public bool HasChildren { get; private set; }
-            public long? Value
+            public long? Value { get; set; }
+
+            public IEnumerable<TrieItem> Children
             {
-                get { return _value; }
-                set
+                get
                 {
-                    _value = value;
-                    MarkDirty();
+                    if (Payload != null)
+                    {
+                        ReadChildren();
+                        Payload = null;
+                    }
+                    return _children;
                 }
             }
-            public IEnumerable<TrieItem> Children => _children;
 
             public TrieItem(byte[] key, long? value) : this(new Bufferpart(key), value)
             { }
@@ -185,15 +184,7 @@ namespace Trie
             public void AddChild(TrieItem child)
             {
                 _children.Add(child);
-                child._parent = this;
                 HasChildren = true;
-                MarkDirty();
-            }
-
-            private void MarkDirty()
-            {
-                _itemSize = null;
-                _parent?.MarkDirty();
             }
 
             private int PayloadSize
@@ -209,19 +200,17 @@ namespace Trie
                 }
             }
 
-            private int? _itemSize;
-            private TrieItem _parent;
             private byte[] _payload;
-            public int ItemSize => _itemSize ?? GetItemSize();
-
-            private int GetItemSize()
+            public int ItemSize
             {
-                var size = sizeof(byte) //key length
-                        + _key.Length
-                        + (HasChildren ? sizeof(ushort) + PayloadSize : 0) //payload size
-                        + (HasValue ? sizeof(long) : 0);
-                _itemSize = size;
-                return size;
+                get
+                {
+                    var size = sizeof(byte) //key length
+                               + _key.Length
+                               + (HasChildren ? sizeof(ushort) + PayloadSize : 0) //payload size
+                               + (HasValue ? sizeof(long) : 0);
+                    return size;
+                }
             }
 
             public static TrieItem Read(byte[] buffer, ref int address)
@@ -288,20 +277,14 @@ namespace Trie
                 if (Payload != null)
                     storage.WriteBytes(address, Payload, out address);
                 else
-                    for (var index = 0; index < _children.Count; index++)
+                    foreach (var child in Children)
                     {
-                        var child = _children[index];
                         child.Write(storage, ref address);
                     }
             }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
             {
-                if (Payload != null)
-                {
-                    ReadChildren();
-                    Payload = null;
-                }
                 foreach (var child in Children)
                 {
                     if (key.StartsWith(child.Key))
