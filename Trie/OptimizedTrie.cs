@@ -325,7 +325,10 @@ namespace Trie
                 _children.Remove(child);
                 child.Key = child.Key.Substring(common);
                 commonItem.AddChild(child);
-                commonItem.AddChild(Create(keyLeft.Substring(common), value));
+                if (keyLeft.Length == common)
+                    commonItem.Value = value;
+                else
+                    commonItem.AddChild(Create(keyLeft.Substring(common), value));
                 AddChild(commonItem);
             }
 
