@@ -679,25 +679,7 @@ namespace Trie
         {
             var trie = new OptimizedTrie();
             
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPTokensCard.dll.hpsign", 256);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\sl\DpHostW.exe.mui", 4096);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\lt\DPoPS.dll.mui", 4608);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\it\DPTokensSpareKey.dll.mui", 24064);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\et\DpFbView.dll.mui", 12288);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\zh-Hant\DpHostW.exe.mui", 3072);
             trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll.hpsign", 256);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\nl\DPRsaTokPdr.dll.mui", 15360);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPTokensSCa.dll.hpsign", 256);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DpOSet.dll.hpsign", 256);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\sv\DPRsaTokPdr.dll.mui", 14336);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\bg\DPoPS.dll.mui", 4608);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\tr\DPEventMsg.dll.mui", 9568);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\es\DPTokens01.dll.mui", 20992);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\zh-Hant\DpFillin.dll.mui", 9728);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\0x0418.ini", 24806);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\sv\DPTokens01.dll.mui", 19968);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\ru\DPEventMsg.dll.mui", 10080);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\pt-PT\DPTokens01.dll.mui", 21504);
             trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll", 251728);
             long value;
             Assert.That(trie.TryRead(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll", out value));
