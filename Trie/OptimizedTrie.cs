@@ -390,7 +390,7 @@ namespace Trie
         }
         public static string ToStringUtf8(this Bufferpart bytes)
         {
-            return Utf8.GetString(bytes.Buffer,bytes.Offset, bytes.Length);
+            return Utf8.GetString(bytes.Buffer, bytes.Offset, bytes.Length);
         }
         private static readonly Encoding Utf8 = new UTF8Encoding();
     }
