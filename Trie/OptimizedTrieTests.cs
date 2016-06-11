@@ -270,6 +270,42 @@ namespace Trie
             }, storage);
         }
 
+
+        [Test]
+        public void WriteSecondItemWithJustSamePrefixWorks()
+        {
+            var storage = new byte[]
+            {
+                4|1<<7,
+                (byte)'t',(byte)'e',(byte)'s',(byte)'t',
+                123,0,0,0,
+                0,0,0,0,
+
+                0, 0,
+                0, 0, 0, 0,
+                0, 0,
+                0,
+                0, 0, 0
+            };
+
+            var undertest = new OptimizedTrie(storage);
+            var result = undertest.TryWrite("te", 99);
+            Assert.That(result, "expected success");
+            CollectionAssert.AreEqual(new byte[]
+            {
+                2|1<<6|1<<7,
+                (byte)'t',(byte)'e',
+                99,0,0,0,
+                0,0,0,0,
+                11, 0,
+                2|1<<7,
+                (byte)'s',(byte)'t',
+                123,0,0,0,
+                0,0,0,0,
+                0,
+            }, storage);
+        }
+
         [Test]
         public void ReadFirstItemWorks()
         {
@@ -680,7 +716,7 @@ namespace Trie
             var trie = new OptimizedTrie();
             
             trie.TryWrite(@"dll.hpsign", 256);
-            trie.TryWrite(@"dll", 251728);
+            trie.TryWrite(@"dll", 99);
             long value;
             Assert.That(trie.TryRead(@"dll", out value));
         }
