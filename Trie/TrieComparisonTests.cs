@@ -10,12 +10,22 @@ namespace Trie
     [TestFixture]
     public class TrieComparisonTests
     {
+
         private KeyValuePair<string, long>[] _testdata;
 
         [TestFixtureSetUp]
         public void GenerateTestData()
         {
-            _testdata = GetTestData().Take(32 * 1024 / 8).ToArray();
+            _testdata = Shuffle(GetTestData().Take(32 * 1024 / 8)).ToArray();
+        }
+
+        private IEnumerable<T> Shuffle<T>(IEnumerable<T> items)
+        {
+            var r = new Random();
+            return items
+                .Select(i => new { item = i, order = r.NextDouble() })
+                .OrderBy(kv => kv.order)
+                .Select(kv => kv.item);
         }
 
         [Test]
@@ -36,7 +46,7 @@ namespace Trie
 
         public void TestOptimizedTrie()
         {
-            TestTrie(new OptimizedTrie(), _testdata);
+            TestTrie(new OptimizedTrie(new byte[64 * 1024]), _testdata);
         }
 
         private static void TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
@@ -46,22 +56,18 @@ namespace Trie
             var stopwatch = Stopwatch.StartNew();
             foreach (var kv in testdata)
             {
+                Console.WriteLine($"trie.TryWrite(\"{kv.Key}\", {kv.Value});");
                 if (!trie.TryWrite(kv.Key, kv.Value))
                     break;
+                long value;
+                if (!trie.TryRead(kv.Key, out value))
+                    throw new InvalidDataException($"could not read back {kv.Key}: key not found");
+                if (value != kv.Value)
+                    throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
                 items++;
             }
             Console.WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
             Console.WriteLine($"Items in {trie.GetType()}: {items}");
-            stopwatch.Restart();
-            foreach (var kv in testdata.Take(items))
-            {
-                long value;
-                if (!trie.TryRead(kv.Key, out value))
-                    throw new InvalidDataException($"could not read back {kv.Key}: key not found");
-                if ( value != kv.Value)
-                    throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
-            }
-            Console.WriteLine($"Readback Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
         }
 
         IEnumerable<KeyValuePair<string, long>> GetTestData()

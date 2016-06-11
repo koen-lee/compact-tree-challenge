@@ -2,7 +2,7 @@
 
 namespace Trie
 {
-    struct Bufferpart
+    public struct Bufferpart
     {
         public readonly byte[] Buffer;
         public readonly int Offset;

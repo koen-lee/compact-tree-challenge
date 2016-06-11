@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace Trie
 {
@@ -187,7 +188,7 @@ namespace Trie
                 HasChildren = true;
             }
 
-            private int PayloadSize
+            public int PayloadSize
             {
                 get
                 {
@@ -379,5 +380,15 @@ namespace Trie
             address += sizeof(ushort);
             return result;
         }
+
+        public static string ToStringUtf8(this byte[] bytes)
+        {
+            return Utf8.GetString(bytes);
+        }
+        public static string ToStringUtf8(this Bufferpart bytes)
+        {
+            return Utf8.GetString(bytes.Buffer,bytes.Offset, bytes.Length);
+        }
+        private static readonly Encoding Utf8 = new UTF8Encoding();
     }
 }
