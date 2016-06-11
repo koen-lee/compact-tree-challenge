@@ -679,10 +679,10 @@ namespace Trie
         {
             var trie = new OptimizedTrie();
             
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll.hpsign", 256);
-            trie.TryWrite(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll", 251728);
+            trie.TryWrite(@"dll.hpsign", 256);
+            trie.TryWrite(@"dll", 251728);
             long value;
-            Assert.That(trie.TryRead(@"C:\Program Files\Hewlett-Packard\HP ProtectTools Security Manager\Bin\DPBthMSImpl.dll", out value));
+            Assert.That(trie.TryRead(@"dll", out value));
         }
 
 
