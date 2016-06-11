@@ -54,8 +54,6 @@
     <Compile Include="OptimizedTrie.cs" />
     <Compile Include="OptimizedTrieTests.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="RealTrieTests.cs" />
-    <Compile Include="RealTrie.cs" />
     <Compile Include="NoTrie.cs" />
     <Compile Include="NoTrieTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

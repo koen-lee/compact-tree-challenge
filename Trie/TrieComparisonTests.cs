@@ -34,19 +34,11 @@ namespace Trie
         {
             TestTrie(new NoTrie(), _testdata);
         }
-
+        
         [Test]
-
-        public void TestRealTrie()
-        {
-            TestTrie(new RealTrie(), _testdata);
-        }
-
-        [Test]
-
         public void TestOptimizedTrie()
         {
-            TestTrie(new OptimizedTrie(new byte[64 * 1024]), _testdata);
+            TestTrie(new OptimizedTrie(), _testdata);
         }
 
         private static void TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
