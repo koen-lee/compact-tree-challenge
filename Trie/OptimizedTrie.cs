@@ -228,6 +228,7 @@ namespace Trie
                 if (haschildren)
                 {
                     var payloadLength = buffer.ReadUshort(ref address);
+                    result.PayloadAddress = address;
                     result.Payload = new Bufferpart(buffer, address, payloadLength).GetBytes();
                     address += payloadLength;
                 }
@@ -276,13 +277,23 @@ namespace Trie
                 if (HasChildren)
                     storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 if (Payload != null)
+                {
+                    if( PayloadAddress != address)
                     storage.WriteBytes(address, Payload, out address);
+                    else
+                    {
+                        // no need to write
+                        address += PayloadSize;
+                    }
+                }
                 else
                     foreach (var child in Children)
                     {
                         child.Write(storage, ref address);
                     }
             }
+
+            public int PayloadAddress { get; set; }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
             {
