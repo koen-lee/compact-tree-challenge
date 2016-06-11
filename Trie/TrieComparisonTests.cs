@@ -56,18 +56,22 @@ namespace Trie
             var stopwatch = Stopwatch.StartNew();
             foreach (var kv in testdata)
             {
-                Console.WriteLine($"trie.TryWrite(\"{kv.Key}\", {kv.Value});");
                 if (!trie.TryWrite(kv.Key, kv.Value))
                     break;
-                long value;
-                if (!trie.TryRead(kv.Key, out value))
-                    throw new InvalidDataException($"could not read back {kv.Key}: key not found");
-                if (value != kv.Value)
-                    throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
                 items++;
             }
             Console.WriteLine($"Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
             Console.WriteLine($"Items in {trie.GetType()}: {items}");
+            stopwatch.Restart();
+            foreach (var kv in testdata.Take(items))
+            {
+                long value;
+                if (!trie.TryRead(kv.Key, out value))
+                    throw new InvalidDataException($"could not read back {kv.Key}: key not found");
+                if ( value != kv.Value)
+                    throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
+            }
+            Console.WriteLine($"Readback Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
         }
 
         IEnumerable<KeyValuePair<string, long>> GetTestData()
