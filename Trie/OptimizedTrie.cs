@@ -278,8 +278,10 @@ namespace Trie
                     storage.WriteUshort(address, (ushort)PayloadSize, out address);
                 if (Payload != null)
                 {
-                    if( PayloadAddress != address)
-                    storage.WriteBytes(address, Payload, out address);
+                    if (PayloadAddress != address)
+                    {
+                        storage.WriteBytes(address, Payload, out address);
+                    }
                     else
                     {
                         // no need to write
@@ -311,7 +313,9 @@ namespace Trie
                 var address = 0;
                 while (address < Payload.Length)
                 {
-                    AddChild(Read(Payload, ref address));
+                    var child = Read(Payload, ref address);
+                    child.PayloadAddress += PayloadAddress; //add my offset
+                    AddChild(child);
                 }
             }
 
