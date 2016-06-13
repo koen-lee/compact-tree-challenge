@@ -138,7 +138,7 @@ namespace Trie
             return key;
         }
 
-        [DebuggerDisplay("{Key} {Value}")]
+        [DebuggerDisplay("{Key.AsUtf8String} {Value}")]
         public class TrieItem
         {
             public Bufferpart Key

@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Trie
 {
+    [DebuggerDisplay("l={Length} {AsUtf8String}")]
     public struct Bufferpart
     {
         public readonly byte[] Buffer;
         public readonly int Offset;
         public readonly int Length;
-
+        
+        public string AsUtf8String => this.ToStringUtf8();
 
         public Bufferpart(byte[] buffer)
             : this(buffer, 0, buffer.Length)
         { }
+
         public Bufferpart(byte[] buffer, int offset, int length)
         {
             this.Buffer = buffer;
