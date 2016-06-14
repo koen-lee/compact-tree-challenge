@@ -165,8 +165,7 @@ namespace Trie
                 {
                     if (Payload != null)
                     {
-                        ReadChildren();
-                        Payload = null;
+                        return _children.Concat(ReadMoreChildren());
                     }
                     return _children;
                 }
@@ -192,16 +191,18 @@ namespace Trie
             {
                 get
                 {
-                    if (Payload != null)
-                        return Payload.Length;
                     var sum = 0;
                     for (int i = 0; i < _children.Count; i++)
                         sum += _children[i].ItemSize;
+                    if (Payload != null)
+                        sum += Payload.Length - _lastReadChildAddress;
                     return sum;
                 }
             }
 
             private byte[] _payload;
+            private int _lastReadChildAddress;
+
             public int ItemSize
             {
                 get
@@ -275,27 +276,34 @@ namespace Trie
                 if (Value.HasValue)
                     storage.WriteLong(address, Value.Value, out address);
                 if (HasChildren)
-                    storage.WriteUshort(address, (ushort)PayloadSize, out address);
-                if (Payload != null)
                 {
-                    if (PayloadAddress != address)
-                    {
-                        storage.WriteBytes(address, Payload, out address);
-                    }
-                    else
-                    {
-                        // no need to write
-                        address += PayloadSize;
-                    }
+                    storage.WriteUshort(address, (ushort)PayloadSize, out address);
+                    WriteChildren(storage, ref address);
+                }
+            }
+
+            private void WriteChildren(OptimizedTrie storage, ref int address)
+            {
+                if (PayloadAddress == address && _lastReadChildAddress == 0 && _children.Count == 0)
+                {
+                    // no need to write, nothing changed
+                    address += Payload.Length;
                 }
                 else
-                    foreach (var child in Children)
+                {
+                    // A child has changed, so rewrite all children
+                    foreach (var child in _children)
                     {
                         child.Write(storage, ref address);
                     }
+                    if (Payload != null)
+                        storage.WriteBytes(address, 
+                            new Bufferpart(Payload, _lastReadChildAddress), 
+                            out address );
+                }
             }
 
-            public int PayloadAddress { get; set; }
+            private int PayloadAddress { get; set; }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
             {
@@ -308,15 +316,16 @@ namespace Trie
                 return this;
             }
 
-            private void ReadChildren()
+            private IEnumerable<TrieItem> ReadMoreChildren()
             {
-                var address = 0;
-                while (address < Payload.Length)
+                while (_lastReadChildAddress < Payload.Length)
                 {
-                    var child = Read(Payload, ref address);
+                    var child = Read(Payload, ref _lastReadChildAddress);
                     child.PayloadAddress += PayloadAddress; //add my offset
                     AddChild(child);
+                    yield return child;
                 }
+                Payload = null;
             }
 
             public void CreateChild(Bufferpart keyLeft, long value)
@@ -363,7 +372,7 @@ namespace Trie
             {
                 if (!item.HasChildren)
                     _children.Remove(item);
-                else if (item._children.Count == 1)
+                else if (item.Children.Count() == 1)
                 {
                     _children.Remove(item);
                     var orphan = item._children[0];

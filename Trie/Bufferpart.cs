@@ -23,6 +23,9 @@ namespace Trie
             this.Length = length;
         }
 
+        public Bufferpart(byte[] buffer, int offset) : this(buffer, offset, buffer.Length - offset)
+        {}
+
         public byte[] GetBytes()
         {
             var result = new byte[Length];
