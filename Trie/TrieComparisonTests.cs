@@ -36,12 +36,12 @@ namespace Trie
         }
         
         [Test]
-        public void TestOptimizedTrie()
+        public int TestOptimizedTrie()
         {
-            TestTrie(new OptimizedTrie(), _testdata);
+            return TestTrie(new OptimizedTrie(), _testdata);
         }
 
-        private static void TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
+        private static int TestTrie(ITrie trie, KeyValuePair<string, long>[] testdata)
         {
             var items = 0;
             Console.WriteLine($"Testing {trie.GetType()}");
@@ -64,6 +64,7 @@ namespace Trie
                     throw new InvalidDataException($"could not read back {kv.Key}: expected {kv.Value}, got {value}");
             }
             Console.WriteLine($"Readback Elapsed: {stopwatch.ElapsedMilliseconds} milliseconds");
+            return items;
         }
 
         IEnumerable<KeyValuePair<string, long>> GetTestData()

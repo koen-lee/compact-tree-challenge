@@ -1,3 +1,7 @@
+using System;
+using System.Diagnostics;
+using System.Threading;
+
 namespace Trie
 {
     public static class Program
@@ -6,16 +10,14 @@ namespace Trie
         {
             var tester = new TrieComparisonTests();
             tester.GenerateTestData();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
-            tester.TestOptimizedTrie();
+            var s = Stopwatch.StartNew();
+            long total = 0;
+            while (s.ElapsedMilliseconds < 1000)
+            {
+                total += tester.TestOptimizedTrie();
+            }
+            Console.WriteLine(total);
+            Thread.Sleep(1000);
         }
     }
 }
