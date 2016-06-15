@@ -64,7 +64,14 @@ namespace Trie
         {
             using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
             {
-                stream.Read(_storage, 0, _storage.Length);
+                var lastAddress = 0;
+                do
+                {
+                    var read = stream.Read(_storage, lastAddress, _storage.Length - lastAddress);
+                    if (read == 0)
+                        throw new ArgumentException("file too small");
+                    lastAddress += read;
+                } while (lastAddress < _storage.Length);
             }
         }
     }
