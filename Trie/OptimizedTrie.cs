@@ -129,8 +129,8 @@ namespace Trie
                 hasvalue = haschildren = false;
                 return new Bufferpart(EmptyKey);
             }
-            hasvalue = (keylength & 1 << 7) != 0;
-            haschildren = (keylength & 1 << 6) != 0;
+            hasvalue = (keylength & TrieItem.HasValueFlag) != 0;
+            haschildren = (keylength & TrieItem.HasChildrenFlag) != 0;
             keylength &= TrieItem.MaxKeylength;
             address++;
             var key = new Bufferpart(buffer, address, keylength);
@@ -141,6 +141,9 @@ namespace Trie
         [DebuggerDisplay("{Key.AsUtf8String} {Value}")]
         public class TrieItem
         {
+            internal const int HasValueFlag = 1 << 7;
+            internal const int HasChildrenFlag = 1 << 6;
+
             public Bufferpart Key
             {
                 get { return _key; }
@@ -245,6 +248,7 @@ namespace Trie
                     HasChildren = true;
                 }
             }
+            private int PayloadAddress { get; set; }
 
             public static TrieItem Create(Bufferpart key, long? value)
             {
@@ -267,9 +271,9 @@ namespace Trie
             {
                 byte keylength = (byte)_key.Length;
                 if (HasValue)
-                    keylength |= 1 << 7;
+                    keylength |= HasValueFlag;
                 if (HasChildren)
-                    keylength |= 1 << 6;
+                    keylength |= HasChildrenFlag;
                 storage._storage[address] = keylength;
                 address++;
                 storage.WriteBytes(address, _key, out address);
@@ -302,8 +306,6 @@ namespace Trie
                             out address );
                 }
             }
-
-            private int PayloadAddress { get; set; }
 
             public TrieItem FindParentOf(Bufferpart key, out Bufferpart keyLeft)
             {
