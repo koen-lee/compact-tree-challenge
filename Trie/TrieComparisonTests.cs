@@ -27,13 +27,6 @@ namespace Trie
                 .OrderBy(kv => kv.order)
                 .Select(kv => kv.item);
         }
-
-        [Test]
-
-        public void TestNoTrie()
-        {
-            TestTrie(new NoTrie(), _testdata);
-        }
         
         [Test]
         public int TestOptimizedTrie()

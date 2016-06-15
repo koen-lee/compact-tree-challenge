@@ -10,24 +10,11 @@ namespace Trie
         protected static readonly Encoding Encoding = new UTF8Encoding();
 
         protected readonly byte[] _storage; // required: this is the only field allowed
-        
+
         protected BaseTrie(byte[] storage)
         {
             if (storage.Length - 1 > ushort.MaxValue) throw new ArgumentOutOfRangeException(nameof(storage), "Array too big");
             _storage = storage;
-        }
-
-        protected string ReadString(int address, out int next)
-        {
-            int startOfString;
-            var length = ReadUshort(address, out startOfString);
-            if (length == 0)
-            {
-                next = address;
-                return string.Empty;
-            }
-            next = startOfString + length;
-            return Encoding.GetString(_storage, startOfString, length );
         }
 
         protected long ReadLong(int address, out int next)
@@ -59,17 +46,6 @@ namespace Trie
         {
             next = i + bytes.Length;
             Array.Copy(bytes, 0, _storage, i, bytes.Length);
-        }
-
-        private bool WriteKeyValue(int i, string key, long value)
-        {
-            var bytes = Encoding.GetBytes(key);
-            if (i + sizeof(ushort) + bytes.Length + sizeof(long) > _storage.Length)
-                return false; // does not fit
-            WriteUshort(i, (ushort)bytes.Length, out i);
-            WriteBytes(i, bytes, out i);
-            WriteLong(i, value, out i);
-            return true;
         }
 
         public abstract bool TryRead(string key, out long value);
