@@ -27,16 +27,22 @@ namespace Garage
         }
 
         const int DICT_BLOCK_SIZE = 1000;
+        const int recordsize = 50;
+
         private static void CreateSummaryOptimized(string path)
         {
             var dict = new int[9999999 + 1 / DICT_BLOCK_SIZE][];
-            var records = File.ReadLines(path, Encoding.UTF8);
+            var file = new FileInfo(path);
 
-            foreach (var record in records)
+            var record = new byte[recordsize];
+            using (var records = file.OpenRead())
             {
-                ProcessLine(record, dict);
+                for (int i = 0; i < file.Length; i += recordsize)
+                {
+                    records.Read(record, 0, recordsize);
+                    ProcessLine(record, dict);
+                }
             }
-
             using (var output = File.CreateText("summary.txt"))
             {
                 for (int i = 0; i < dict.Length; i++)
@@ -53,12 +59,12 @@ namespace Garage
             }
         }
 
-        private static void ProcessLine(string record, int[][] dict)
+        private static void ProcessLine(byte[] record, int[][] dict)
         {
             int durationSeconds;
             if (!BufferEqual(record, startIndex1: 0, startIndex2: 20, length: 10)) // Same day check
             {
-                var parts = record.Split(' ');
+                var parts = ToString(record).Split(' ');
                 var start = DateTime.Parse(parts[0]);
                 var end = DateTime.Parse(parts[1]);
                 durationSeconds = (int)(end - start).TotalSeconds;
@@ -81,9 +87,9 @@ namespace Garage
         /// <param name="record"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        private static int ParseTime(string record, int index)
+        private static int ParseTime(byte[] record, int index)
         {
-            if (record[index - 1] != 'T') throw new FormatException(record.Substring(index, 8) + " is not a time");
+            if (record[index - 1] != 'T') throw new FormatException(ToString(record).Substring(index, 8) + " is not a time");
             //hours
             var result = ParseInt(record, index, 2);
             //minutes
@@ -93,7 +99,7 @@ namespace Garage
             return result;
         }
 
-        private static int ParseInt(string record, int startIndex, int length)
+        private static int ParseInt(byte[] record, int startIndex, int length)
         {
             var result = 0;
             for (var i = startIndex; i < startIndex + length; i++)
@@ -103,13 +109,18 @@ namespace Garage
             return result;
         }
 
-        private static bool BufferEqual(string record, int startIndex1, int startIndex2, int length)
+        private static bool BufferEqual(byte[] record, int startIndex1, int startIndex2, int length)
         {
             for (int i = length - 1; i >= 0; i--)
             {
                 if (record[startIndex1 + i] != record[startIndex2 + i]) return false;
             }
             return true;
+        }
+
+        static string ToString(byte[] buffer)
+        {
+            return Encoding.UTF8.GetString(buffer);
         }
     }
 }
