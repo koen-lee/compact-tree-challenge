@@ -64,9 +64,8 @@ namespace Garage
             int durationSeconds;
             if (!BufferEqual(record, startIndex1: 0, startIndex2: 20, length: 10)) // Same day check
             {
-                var parts = ToString(record).Split(' ');
-                var start = DateTime.Parse(parts[0]);
-                var end = DateTime.Parse(parts[1]);
+                var start = ParseDateTime(record, 0);
+                var end = ParseDateTime(record, 20);
                 durationSeconds = (int)(end - start).TotalSeconds;
             }
             else
@@ -79,6 +78,18 @@ namespace Garage
             //Interlocked.Add(ref dict[id], durationSeconds);
             if (dict[id / DICT_BLOCK_SIZE] == null) dict[id / DICT_BLOCK_SIZE] = new int[DICT_BLOCK_SIZE];
             dict[id / DICT_BLOCK_SIZE][id % DICT_BLOCK_SIZE] += durationSeconds;
+        }
+
+        private static DateTime ParseDateTime(byte[] record, int offset)
+        {
+            return new DateTime(kind: DateTimeKind.Utc,
+                year: ParseInt(record, offset, 4),
+                month: ParseInt(record, offset + 5, 2),
+                day: ParseInt(record, offset + 8, 2),
+                hour: ParseInt(record, offset + 11, 2),
+                minute: ParseInt(record, offset + 14, 2),
+                second: ParseInt(record, offset + 17, 2)
+                );
         }
 
         /// <summary>
