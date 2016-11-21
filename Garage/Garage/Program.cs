@@ -34,13 +34,15 @@ namespace Garage
             var dict = new int[9999999 + 1 / DICT_BLOCK_SIZE][];
             var file = new FileInfo(path);
 
-            var record = new byte[recordsize];
+            var record = new byte[1000 * recordsize];
             using (var records = file.OpenRead())
             {
-                for (int i = 0; i < file.Length; i += recordsize)
+                for (;;)
                 {
-                    records.Read(record, 0, recordsize);
-                    ProcessLine(record, dict);
+                    var bytesRead = records.Read(record, 0, record.Length);
+                    if (bytesRead <= 0) break;
+                    for (int i = 0; i < bytesRead; i += recordsize)
+                        ProcessLine(record, i, dict);
                 }
             }
             using (var output = File.CreateText("summary.txt"))
@@ -59,25 +61,26 @@ namespace Garage
             }
         }
 
-        private static void ProcessLine(byte[] record, int[][] dict)
+        private static void ProcessLine(byte[] record, int offset, int[][] dict)
         {
             int durationSeconds;
-            if (!BufferEqual(record, startIndex1: 0, startIndex2: 20, length: 10)) // Same day check
+            if (!BufferEqual(record, startIndex1: offset + 0, startIndex2: offset + 20, length: 10)) // Same day check
             {
-                var start = ParseDateTime(record, 0);
-                var end = ParseDateTime(record, 20);
+                var start = ParseDateTime(record, offset + 0);
+                var end = ParseDateTime(record, offset + 20);
                 durationSeconds = (int)(end - start).TotalSeconds;
             }
             else
             {
-                var start = ParseTime(record, index: 11);
-                var end = ParseTime(record, index: 31);
+                var start = ParseTime(record, index: offset + 11);
+                var end = ParseTime(record, index: offset + 31);
                 durationSeconds = end - start;
             }
-            var id = ParseInt(record, startIndex: 40, length: 8);
+            var id = ParseInt(record, startIndex: offset + 40, length: 8);
+            int[] dictionary = dict[id / DICT_BLOCK_SIZE];
             //Interlocked.Add(ref dict[id], durationSeconds);
-            if (dict[id / DICT_BLOCK_SIZE] == null) dict[id / DICT_BLOCK_SIZE] = new int[DICT_BLOCK_SIZE];
-            dict[id / DICT_BLOCK_SIZE][id % DICT_BLOCK_SIZE] += durationSeconds;
+            if (dictionary == null) dict[id / DICT_BLOCK_SIZE] = dictionary = new int[DICT_BLOCK_SIZE];
+            dictionary[id % DICT_BLOCK_SIZE] += durationSeconds;
         }
 
         private static DateTime ParseDateTime(byte[] record, int offset)
