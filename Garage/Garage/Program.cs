@@ -5,14 +5,6 @@ using System.Text;
 
 namespace Garage
 {
-    public class Record
-    {
-        public DateTime Start { get; set; }
-        public DateTime End { get; set; }
-        public int Id { get; set; }
-        public TimeSpan Duration => End - Start;
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -103,13 +95,19 @@ namespace Garage
         /// <returns></returns>
         private static int ParseTime(byte[] record, int index)
         {
-            if (record[index - 1] != 'T') throw new FormatException(ToString(record).Substring(index, 8) + " is not a time");
             //hours
-            var result = ParseInt(record, index, 2);
+            var result = ParseUint(record, index);
             //minutes
-            result = result * 60 + ParseInt(record, index + 3, 2);
+            result = result * 60 + ParseUint(record, index + 3);
             //seconds
-            result = result * 60 + ParseInt(record, index + 6, 2);
+            result = result * 60 + ParseUint(record, index + 6);
+            return result;
+        }
+
+        private static int ParseUint(byte[] record, int startindex)
+        {
+            var result = record[startindex] - '0';
+            result = result * 10 + record[startindex + 1] - '0';
             return result;
         }
 
