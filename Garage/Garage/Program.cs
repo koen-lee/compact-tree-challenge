@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Garage
 {
@@ -29,9 +26,10 @@ namespace Garage
             Console.WriteLine($"Took: {sp.ElapsedMilliseconds:#,#} ms and allocated {AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize / 1024:#,#} kb with peak working set of {Process.GetCurrentProcess().PeakWorkingSet64 / 1024:#,#} kb");
         }
 
+        const int DICT_BLOCK_SIZE = 1000;
         private static void CreateSummaryOptimized(string path)
         {
-            var dict = new int[99999 + 1][];
+            var dict = new int[9999999 + 1 / DICT_BLOCK_SIZE][];
             var records = File.ReadLines(path, Encoding.UTF8);
 
             foreach (var record in records)
@@ -47,10 +45,10 @@ namespace Garage
                     {
                         for (int j = 0; j < dict[i].Length; j++)
                         {
-                            output.WriteLine($"{i * 1000 + j:D10} {TimeSpan.FromSeconds(dict[i][j]):c}");
+                            if (dict[i][j] > 0)
+                                output.WriteLine($"{i * DICT_BLOCK_SIZE + j:D10} {TimeSpan.FromSeconds(dict[i][j]):c}");
                         }
                     }
-
                 }
             }
         }
@@ -73,8 +71,8 @@ namespace Garage
             }
             var id = ParseInt(record, startIndex: 40, length: 8);
             //Interlocked.Add(ref dict[id], durationSeconds);
-            if (dict[id / 1000] == null) dict[id / 1000] = new int[1000];
-            dict[id / 1000][id % 1000] += durationSeconds;
+            if (dict[id / DICT_BLOCK_SIZE] == null) dict[id / DICT_BLOCK_SIZE] = new int[DICT_BLOCK_SIZE];
+            dict[id / DICT_BLOCK_SIZE][id % DICT_BLOCK_SIZE] += durationSeconds;
         }
 
         /// <summary>
