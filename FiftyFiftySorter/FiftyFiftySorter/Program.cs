@@ -54,7 +54,7 @@ namespace FiftyFiftySorter
             var result = new List<Plant>(100);
             for (int plant = 0; plant < 100; plant++)
             {
-                var height = min + random.Next(100);
+                var height = min + random.Next(100) + random.Next(100);
                 var destination = sorter.GetDestinationForPlant(height);
                 var item = new Plant
                 {
@@ -70,7 +70,7 @@ namespace FiftyFiftySorter
         private static void ReportResults(List<Plant> plants)
         {
             var count = plants.Count(p => p.Destination == Destination.Left);
-            var expectedCount = 50;
+            var expectedCount = 60;
             if (count != expectedCount)
             {
                 throw new Exception($"Expected {expectedCount} to Left, but was {count}");
