@@ -5,7 +5,7 @@ namespace FiftyFiftySorter
 {
     class Sorter
     {
-        private int _smallPlantsLeft = 50;
+        private int _smallPlantsLeft = 300;
         private readonly List<int> _heights = new List<int>();
 
         public Destination GetDestinationForPlant(int height)
@@ -15,7 +15,7 @@ namespace FiftyFiftySorter
                 result = Destination.Right;
             else
             {
-                var plantsToDo = 100 - _heights.Count;
+                var plantsToDo = 500 - _heights.Count;
                 if (plantsToDo == _smallPlantsLeft)
                     result = Destination.Left;
                 else
