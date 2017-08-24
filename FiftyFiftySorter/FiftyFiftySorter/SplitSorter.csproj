@@ -7,8 +7,8 @@
     <ProjectGuid>{400AE396-36A5-4F6C-AF4F-97CA332FE919}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FiftyFiftySorter</RootNamespace>
-    <AssemblyName>FiftyFiftySorter</AssemblyName>
+    <RootNamespace>SplitSorter</RootNamespace>
+    <AssemblyName>SplitSorter</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

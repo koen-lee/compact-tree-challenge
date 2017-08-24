@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace FiftyFiftySorter
+namespace SplitSorter
 {
     public enum Destination
     {
@@ -51,7 +50,7 @@ namespace FiftyFiftySorter
         private static List<Plant> SortPlants(Random random, Sorter sorter)
         {
             var min = random.Next(0, 1000);
-            var result = new List<Plant>(100);
+            var result = new List<Plant>();
             for (int plant = 0; plant < 500; plant++)
             {
                 var height = min + random.Next(100) + random.Next(100);

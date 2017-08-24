@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiftyFiftySorter", "FiftyFiftySorter.csproj", "{400AE396-36A5-4F6C-AF4F-97CA332FE919}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitSorter", "SplitSorter.csproj", "{400AE396-36A5-4F6C-AF4F-97CA332FE919}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
